@@ -42,59 +42,24 @@ class Trapeze
         get { return _c; }
     }
 
-    // Метод для виведення довжин на екран
-    public void DisplayDimensions()
-    {
-        Console.WriteLine($"Основи: {_a}, {_b}; Висота: {_h}; Колір: {_c}");
-    }
-
-    // Метод для розрахунку периметра трапеції
-    public double CalculatePerimeter()
-    {
-        // Для обчислення периметра необхідно знати довжини бічних сторін. 
-        // Використовуємо теорему Піфагора для обчислення довжин бічних сторін, вважаючи їх рівними
-        double sideLength = Math.Sqrt(Math.Pow((Math.Abs(_a - _b) / 2.0), 2) + Math.Pow(_h, 2));
-        return _a + _b + 2 * sideLength;
-    }
-
-    // Метод для розрахунку площі трапеції
-    public double CalculateArea()
-    {
-        return ((_a + _b) / 2.0) * _h;
-    }
-
-    // Властивість для визначення, чи є трапеція квадратом
-    public bool IsSquare
-    {
-        get
-        {
-            return _a == _b && _h == _a;
-        }
-    }
-
     // Індексатор
-    public int this[int index]
+    public object this[int index]
     {
         get
         {
-            switch (index)
-            {
-                case 0: return _a;
-                case 1: return _b;
-                case 2: return _h;
-                case 3: return _c;
-                default: throw new IndexOutOfRangeException("Недійсний індекс");
-            }
+            if (index == 0) return _a;
+            else if (index == 1) return _b;
+            else if (index == 2) return _h;
+            else if (index == 3) return _c;
+            else throw new IndexOutOfRangeException("Неправильний індекс");
         }
         set
         {
-            switch (index)
-            {
-                case 0: _a = value; break;
-                case 1: _b = value; break;
-                case 2: _h = value; break;
-                default: throw new IndexOutOfRangeException("Недійсний індекс або спроба змінити значення кольору");
-            }
+            if (index == 0) _a = (int)value;
+            else if (index == 1) _b = (int)value;
+            else if (index == 2) _h = (int)value;
+            else if (index == 3) throw new InvalidOperationException("Неможливо змінити значення кольору");
+            else throw new IndexOutOfRangeException("Неправильний індекс");
         }
     }
 
@@ -116,12 +81,10 @@ class Trapeze
     // Перевантаження операції *
     public static Trapeze operator *(Trapeze t, int scalar)
     {
-        t._a *= scalar;
-        t._h *= scalar;
-        return t;
+        return new Trapeze(t._a * scalar, t._b * scalar, t._h * scalar, t._c);
     }
 
-    // Константи true і false
+    // Перевантаження операцій true та false
     public static bool operator true(Trapeze t)
     {
         return t._a > 0 && t._b > 0 && t._h > 0;
@@ -129,25 +92,51 @@ class Trapeze
 
     public static bool operator false(Trapeze t)
     {
-        return t._a <= 0 || t._b <= 0 || t._h <= 0;
+        return !(t._a > 0 && t._b > 0 && t._h > 0);
     }
 
     // Перетворення типу Trapeze в string
-    public override string ToString()
+    public static implicit operator string(Trapeze t)
     {
-        return $"{_a},{_b},{_h},{_c}";
+        return $"{t._a},{t._b},{t._h},{t._c}";
     }
 
     // Перетворення типу string в Trapeze
-    public static Trapeze FromString(string str)
+    public static explicit operator Trapeze(string s)
     {
-        var parts = str.Split(',');
-        if (parts.Length != 4) throw new FormatException("Рядок має бути у форматі 'a,b,h,c'");
-        int a = int.Parse(parts[0]);
-        int b = int.Parse(parts[1]);
-        int h = int.Parse(parts[2]);
-        int c = int.Parse(parts[3]);
-        return new Trapeze(a, b, h, c);
+        var parts = s.Split(',');
+        if (parts.Length != 4)
+            throw new FormatException("Неправильний формат строки");
+        
+        return new Trapeze(int.Parse(parts[0]), int.Parse(parts[1]), int.Parse(parts[2]), int.Parse(parts[3]));
+    }
+
+    // Метод для виведення довжин на екран
+    public void DisplayDimensions()
+    {
+        Console.WriteLine($"Основи: {_a}, {_b}; Висота: {_h}; Колір: {_c}");
+    }
+
+    // Метод для розрахунку периметра трапеції
+    public double CalculatePerimeter()
+    {
+        double sideLength = Math.Sqrt(Math.Pow((Math.Abs(_a - _b) / 2.0), 2) + Math.Pow(_h, 2));
+        return _a + _b + 2 * sideLength;
+    }
+
+    // Метод для розрахунку площі трапеції
+    public double CalculateArea()
+    {
+        return ((_a + _b) / 2.0) * _h;
+    }
+
+    // Властивість для визначення, чи є трапеція квадратом
+    public bool IsSquare
+    {
+        get
+        {
+            return _a == _b && _h == _a;
+        }
     }
 }
 
@@ -185,34 +174,23 @@ class Program
 
         Console.WriteLine($"Кількість квадратів: {squareCount}");
 
-        // Тестування індексатора
-        var t = new Trapeze(5, 5, 5, 1);
-        Console.WriteLine($"Трапеція: {t}");
-        Console.WriteLine($"a: {t[0]}, b: {t[1]}, h: {t[2]}, колір: {t[3]}");
+        // Перевірка роботи індексатора
+        Console.WriteLine($"Трапеція 1, індекс 0: {trapezes[0][0]}"); // Повинно вивести 4
 
-        // Тестування перевантаження операцій
-        t++;
-        Console.WriteLine($"Після ++: {t}");
-        t--;
-        Console.WriteLine($"Після --: {t}");
-        t = t * 2;
-        Console.WriteLine($"Після множення на 2: {t}");
+        // Перевірка роботи ++ та --
+        trapezes[0]++;
+        Console.WriteLine($"Після ++, Трапеція 1, основа a: {trapezes[0].A}, основа b: {trapezes[0].B}"); // Повинно вивести 5, 5
+        trapezes[0]--;
+        Console.WriteLine($"Після --, Трапеція 1, основа a: {trapezes[0].A}, основа b: {trapezes[0].B}"); // Повинно вивести 4, 4
 
-        // Тестування перетворення типів
-        string str = t.ToString();
-        Console.WriteLine($"Рядкове представлення: {str}");
-        var t2 = Trapeze.FromString(str);
-        Console.WriteLine($"Трапеція з рядка: {t2}");
+        // Перевірка роботи *
+        var scaledTrapeze = trapezes[0] * 2;
+        Console.WriteLine($"Після множення на 2, Трапеція 1, основа a: {scaledTrapeze.A}, висота h: {scaledTrapeze.H}"); // Повинно вивести 8, 8
 
-        // Тестування констант true і false
-        if (t)
-        {
-            Console.WriteLine("Трапеція дійсна.");
-        }
-        else
-        {
-            Console.WriteLine("Трапеція недійсна.");
-        }
+        // Перевірка перетворення типу
+        string trapezeString = trapezes[0];
+        Console.WriteLine($"Перетворення в string: {trapezeString}"); // Повинно вивести "4,4,4,1"
+        Trapeze trapezeFromString = (Trapeze)"6,7,8,3";
+        trapezeFromString.DisplayDimensions(); // Повинно вивести "Основи: 6, 7; Висота: 8; Колір: 3"
     }
 }
-
